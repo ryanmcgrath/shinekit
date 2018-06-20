@@ -1,5 +1,5 @@
 [package]
-name = "layout"
+name = "shinekit-layout-example"
 version = "0.1.0"
 authors = ["Ryan McGrath <ryan@rymc.io>"]
 

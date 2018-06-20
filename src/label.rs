@@ -17,10 +17,29 @@ use cocoa::foundation::NSString;
 
 use shinekit::color::Color;
 use shinekit::util::empty_frame;
-use shinekit::layout::{Layout, add_autolayout_ivars};
 
-pub struct Text {
-    pub backing_node: Id<Object>
+pub struct Label;
+
+impl Label {
+    pub fn named(name: &str) -> Self {
+        View::named_of_kind_with_backing_node(name, ViewKind::Label, unsafe {
+            let alloc: id = msg_send![register_text_class(), alloc];
+            let view: id = msg_send![alloc, initWithFrame:empty_frame()];
+            msg_send![view, setTranslatesAutoresizingMaskIntoConstraints:NO];
+            msg_send![view, setEditable:NO];
+            msg_send![view, setBezeled:NO];
+            msg_send![view, setBordered:NO];
+            msg_send![view, setDrawsBackground:YES];
+            msg_send![view, setAllowsEditingTextAttributes:NO];
+            msg_send![view, setContentCompressionResistancePriority:250 forOrientation:0];
+            
+            let cell: id = msg_send![view, cell];
+            msg_send![cell, setUsesSingleLineMode:NO];
+            msg_send![cell, setWraps:YES];
+            msg_send![cell, setLineBreakMode:0];
+            Id::from_ptr(view)
+        })
+    }
 }
 
 #[allow(dead_code)]
@@ -28,21 +47,6 @@ impl Text {
     pub fn new() -> Self {
         Text {
             backing_node: unsafe {
-                let alloc: id = msg_send![register_text_class(), alloc];
-                let view: id = msg_send![alloc, initWithFrame:empty_frame()];
-                msg_send![view, setTranslatesAutoresizingMaskIntoConstraints:NO];
-                msg_send![view, setEditable:NO];
-                msg_send![view, setBezeled:NO];
-                msg_send![view, setBordered:NO];
-                msg_send![view, setDrawsBackground:YES];
-                msg_send![view, setAllowsEditingTextAttributes:NO];
-                msg_send![view, setContentCompressionResistancePriority:250 forOrientation:0];
-                
-                let cell: id = msg_send![view, cell];
-                msg_send![cell, setUsesSingleLineMode:NO];
-                msg_send![cell, setWraps:YES];
-                msg_send![cell, setLineBreakMode:0];
-                Id::from_ptr(view)
             }
         }
     }
@@ -68,18 +72,13 @@ impl Text {
     }
 }
 
-impl Layout for Text {
-    fn get_root_backing_node(&self) -> &Object { &*self.backing_node }
-    fn set_constraint_ivar(&mut self, ivar: &str, constraint: id) { unsafe { self.backing_node.set_ivar(ivar, constraint); } }
-}
-
 fn register_text_class() -> *const Class {
     static mut text_class: *const Class = 0 as *const Class;
     static INIT: Once = ONCE_INIT;
 
     INIT.call_once(|| unsafe {
         let superclass = Class::get("NSTextField").unwrap();
-        let mut decl = ClassDecl::new("shinekitTextLabel", superclass).unwrap();
+        let mut decl = ClassDecl::new("ShineKitLabel", superclass).unwrap();
         //decl.add_method(sel!(wantsUpdateLayer), enforce_normalcy as extern fn(&Object, _) -> BOOL);
         //decl.add_method(sel!(updateLayer), update_layer as extern fn(&Object, _));
         add_autolayout_ivars(&mut decl);

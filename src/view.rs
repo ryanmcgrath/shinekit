@@ -33,38 +33,35 @@ pub struct View {
     pub subviews: Vec<View>
 }
 
-unsafe fn create_view_backing_node() -> Id<Object> {
-    let alloc: id = msg_send![register_view_class(), alloc];
-    let view: id = msg_send![alloc, initWithFrame:empty_frame()];
-    msg_send![view, setWantsLayer:YES];
-    msg_send![view, setLayerContentsRedrawPolicy:1];
-    msg_send![view, setTranslatesAutoresizingMaskIntoConstraints:NO];
-    Id::from_ptr(view)
-}
-
 impl View {
-    pub fn named(name: &str) -> Self {
+    pub fn named_of_kind_with_backing_node(name: &str, kind: ViewKind, backing_node: Id<Object>) -> Self {
         View { 
             name: name.into(),
-            kind: ViewKind::View,
-            backing_node: unsafe { create_view_backing_node() },
+            kind: kind,
+            backing_node: backing_node,
             subviews: vec![]
         }
     }
 
+    pub fn named(name: &str) -> Self {
+        View::named_of_kind_with_backing_node(name, ViewKind::View, unsafe {
+            let alloc: id = msg_send![register_view_class(), alloc];
+            let view: id = msg_send![alloc, initWithFrame:empty_frame()];
+            msg_send![view, setWantsLayer:YES];
+            msg_send![view, setLayerContentsRedrawPolicy:1];
+            msg_send![view, setTranslatesAutoresizingMaskIntoConstraints:NO];
+            Id::from_ptr(view)
+        })
+    }
+
     pub fn subviews(self, views: Vec<View>) -> Self {
         let mut subviews = vec![];
-        unsafe {
-            for view in views.into_iter() {
-                msg_send![&*self.backing_node, addSubview:&*view.backing_node];
-                subviews.push(view);
-            }
+        for view in views.into_iter() {
+            unsafe { msg_send![&*self.backing_node, addSubview:&*view.backing_node]; }
+            subviews.push(view);
         }
         
-        View {
-            subviews: subviews,
-            ..self
-        }
+        View { subviews: subviews, ..self }
     }
 
     pub fn set_background_color(&mut self, color: &Color) {
@@ -73,19 +70,14 @@ impl View {
             msg_send![&*self.backing_node, setNeedsDisplay:YES];
         }
     }
-
-    pub fn apply_styles(&mut self, styles: &mut Map<String, Value>) {
-        let bg_color = Color::from_json(&styles[&self.name]["backgroundColor"]);
-        self.set_background_color(&bg_color);
- 
-        for view in &mut self.subviews {
-            view.apply_styles(styles);
-        }
-    }
     
     pub fn get_root_backing_node(&self) -> &Object { &*self.backing_node }
     pub fn get_subviews(&self) -> &Vec<View> { &self.subviews }
-    pub fn set_constraint_ivar(&mut self, ivar: &str, constraint: id) { unsafe { self.backing_node.set_ivar(ivar, constraint); } }
+    pub fn set_ivar(&mut self, ivar: &str, constraint: id) {
+        unsafe {
+            self.backing_node.set_ivar(ivar, constraint);
+        }
+    }
     
     pub fn add_subview(&self, view: &View) {
         unsafe {
@@ -100,19 +92,19 @@ impl View {
         }
     }
   
-    pub fn width(&mut self, width: i32) {
+    pub fn set_width(&mut self, width: f64) {
         unsafe {
             let anchor: id = msg_send![self.get_root_backing_node(), widthAnchor];
-            let constraint: id = msg_send![anchor, constraintEqualToConstant:width as f64];
-            self.set_constraint_ivar("shinekitConstraintWidth", constraint);
+            let constraint: id = msg_send![anchor, constraintEqualToConstant:width];
+            self.set_ivar("shinekitConstraintWidth", constraint);
         }
     }
 
-    pub fn height(&mut self, height: i32) {
+    pub fn set_height(&mut self, height: f64) {
         unsafe {
             let anchor: id = msg_send![self.get_root_backing_node(), heightAnchor];
-            let constraint: id = msg_send![anchor, constraintEqualToConstant:height as f64];
-            self.set_constraint_ivar("shinekitConstraintHeight", constraint);
+            let constraint: id = msg_send![anchor, constraintEqualToConstant:height];
+            self.set_ivar("shinekitConstraintHeight", constraint);
         }
     }
     
@@ -121,7 +113,7 @@ impl View {
             let top_anchor: id = msg_send![self.get_root_backing_node(), topAnchor];
             let view_top_anchor: id = msg_send![view.get_root_backing_node(), topAnchor];
             let constraint: id = msg_send![top_anchor, constraintEqualToAnchor:view_top_anchor constant:margin as f64];
-            self.set_constraint_ivar("shinekitConstraintTop", constraint);
+            self.set_ivar("shinekitConstraintTop", constraint);
         }
     }
    
@@ -130,7 +122,7 @@ impl View {
             let leading_anchor: id = msg_send![self.get_root_backing_node(), leadingAnchor];
             let view_leading_anchor: id = msg_send![view.get_root_backing_node(), leadingAnchor];
             let constraint: id = msg_send![leading_anchor, constraintEqualToAnchor:view_leading_anchor constant:margin as f64];
-            self.set_constraint_ivar("shinekitConstraintLeading", constraint);
+            self.set_ivar("shinekitConstraintLeading", constraint);
         }
     }
 
@@ -140,7 +132,7 @@ impl View {
             let trailing_anchor: id = msg_send![self.get_root_backing_node(), trailingAnchor];
             let view_trailing_anchor: id = msg_send![view.get_root_backing_node(), trailingAnchor];
             let constraint: id = msg_send![trailing_anchor, constraintEqualToAnchor:view_trailing_anchor constant:m];
-            self.set_constraint_ivar("shinekitConstraintTrailing", constraint);
+            self.set_ivar("shinekitConstraintTrailing", constraint);
         }
     }
 
@@ -150,28 +142,52 @@ impl View {
             let bottom_anchor: id = msg_send![self.get_root_backing_node(), bottomAnchor];
             let view_bottom_anchor: id = msg_send![view.get_root_backing_node(), bottomAnchor];
             let constraint: id = msg_send![bottom_anchor, constraintEqualToAnchor:view_bottom_anchor constant:m];
-            self.set_constraint_ivar("shinekitConstraintBottom", constraint);
+            self.set_ivar("shinekitConstraintBottom", constraint);
         }
     }
     
     pub fn activate_constraints(&self) {
-        unsafe {
-            let mut anchors: Vec<id> = vec![];
-            
-            let ivars = [
-                "shinekitConstraintWidth", "shinekitConstraintHeight",
-                "shinekitConstraintTop", "shinekitConstraintLeading",
-                "shinekitConstraintTrailing", "shinekitConstraintBottom"
-            ];
-            
-            let view = self.get_root_backing_node();
-            for ivar in &ivars {
-                let constraint: id = *view.get_ivar(ivar);
-                if constraint != nil { anchors.push(constraint); }
+        let mut constraints: Vec<id> = vec![];
+        
+        let ivars = [
+            "shinekitConstraintWidth", "shinekitConstraintHeight",
+            "shinekitConstraintTop", "shinekitConstraintLeading",
+            "shinekitConstraintTrailing", "shinekitConstraintBottom"
+        ];
+ 
+        for ivar in &ivars {
+            let constraint: id;
+            unsafe { constraint = *self.backing_node.get_ivar(ivar); }
+
+            if constraint != nil {
+                constraints.push(constraint);
             }
-            
-            let constraints = NSArray::arrayWithObjects(nil, &anchors);
-            msg_send![class("NSLayoutConstraint"), activateConstraints:constraints];
+        }
+        
+        if constraints.len() > 0 {
+            unsafe {
+                let bundle = NSArray::arrayWithObjects(nil, &constraints);
+                msg_send![class("NSLayoutConstraint"), activateConstraints:bundle];
+            }
+        }
+    }
+
+    pub fn apply_styles(&mut self, styles: &mut Map<String, Value>) {
+        let bg_color = Color::from_json(&styles[&self.name]["backgroundColor"]);
+        self.set_background_color(&bg_color);
+
+        match styles[&self.name]["width"].as_f64() {
+            Some(width) => self.set_width(width),
+            None => ()
+        }
+        
+        match styles[&self.name]["height"].as_f64() {
+            Some(width) => self.set_width(width),
+            None => ()
+        }
+        
+        for view in &mut self.subviews {
+            view.apply_styles(styles);
         }
     }
 }
