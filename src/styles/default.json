@@ -1,0 +1,27 @@
+{
+    "window": {
+        "backgroundColor": {"r": 35, "g": 108, "b": 218},
+        "defaultWidth": 800,
+        "defaultHeight": 600
+    },
+
+    "root": {
+        "backgroundColor": {"r": 35, "g": 108, "b": 218}
+    },
+
+    "sidebar": {
+        "backgroundColor": {"r": 5, "g": 5, "b": 5},
+        "width": 200,
+        "top": "root.top",
+        "left": "root.left",
+        "bottom": "root.bottom"
+    },
+
+    "content": {
+        "backgroundColor": {"r": 35, "g": 108, "b": 218},
+        "top": "root.top",
+        "left": "sidebar.right",
+        "right": "root.right",
+        "bottom": "root.bottom"
+    }
+}
