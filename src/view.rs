@@ -16,8 +16,8 @@ use objc::runtime::{Class, Object, Sel, BOOL};
 use cocoa::foundation::NSArray;
 use cocoa::base::{class, id, nil, YES, NO};
 
-use shinekit::color::Color;
-use shinekit::util::empty_frame;
+use color::Color;
+use util::empty_frame;
 
 #[derive(Debug)]
 pub enum ViewKind {

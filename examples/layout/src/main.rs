@@ -9,24 +9,8 @@
 //! @author Ryan McGrath <ryan@rymc.io>
 //! @created 05/30/2018
 
-#![allow(dead_code)]
-#![allow(non_upper_case_globals)]
-
-#[macro_use]
-extern crate objc;
-extern crate cocoa;
-extern crate objc_id;
-extern crate core_graphics;
-
-#[macro_use]
-extern crate serde_json;
-
-// extern crate shinekit;
-mod shinekit;
+extern crate shinekit;
 use shinekit::*;
-
-//mod calendar;
-//use calendar::{Data, Calendar};
 
 fn main() {
     shinekit::run(vec![

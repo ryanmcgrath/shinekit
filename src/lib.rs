@@ -7,21 +7,33 @@
 //! @author Ryan McGrath <ryan@rymc.io>
 //! @created 05/30/2018
 
-pub mod application;
-//pub mod tableview;
-pub mod color;
-//pub mod scrollview;
-//pub mod text;
-pub mod util;
-pub mod view;
-pub mod stylesheet;
+#![allow(dead_code)]
+#![allow(non_upper_case_globals)]
 
-pub use application::App;
-pub use stylesheet::StyleSheet;
-pub use view::View;
+#[macro_use]
+extern crate objc;
+extern crate cocoa;
+extern crate objc_id;
+extern crate core_graphics;
 
+#[macro_use]
+extern crate serde_json;
 use serde_json::Value;
+
+pub mod application;
+pub use application::App;
+
+pub mod window;
+pub use window::Window;
+
+pub mod color;
+pub mod util;
+pub mod stylesheet;
 use stylesheet::load_styles;
+pub use stylesheet::StyleSheet;
+
+pub mod view;
+pub use view::View;
 
 pub fn run(user_styles: Vec<(String, Value)>, mut application: App) {
     let mut styles = load_styles(user_styles); 

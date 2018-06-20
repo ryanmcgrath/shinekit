@@ -11,8 +11,8 @@ use cocoa::base::{id, nil, YES, NO};
 use cocoa::appkit::{NSWindow, NSWindowStyleMask, NSBackingStoreType};
 use cocoa::foundation::{NSRect, NSPoint, NSSize, NSString, NSAutoreleasePool};
 
-use shinekit::color::Color;
-use shinekit::view::View;
+use color::Color;
+use view::View;
 
 pub struct Window {
     pub window: id,

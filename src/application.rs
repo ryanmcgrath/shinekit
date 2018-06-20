@@ -17,10 +17,9 @@ use cocoa::appkit::{
 
 use serde_json::{Map, Value};
 
-pub mod window;
-use shinekit::color::Color;
-use shinekit::application::window::Window;
-use shinekit::view::View;
+use color::Color;
+use window::Window;
+use view::View;
 
 pub struct App {
     pub app: id,

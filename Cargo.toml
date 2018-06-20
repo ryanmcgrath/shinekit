@@ -1,7 +1,19 @@
 [package]
-name = "app"
-version = "0.1.0"
+name = "shinekit"
+version = "0.1.0-dev"
 authors = ["Ryan McGrath <ryan@rymc.io>"]
+description = """
+A general UI framework for Mac, iOS, and Windows. Uses actual native
+platform widgets, very little to no middleman. Cocoa on Mac, Cocoa Touch on iOS,
+UWP on Windows, with potentially more coming.
+"""
+documentation = "https://shinekit.rs/docs/"
+homepage = "https://shinekit.rs"
+repository = "https://github.com/ryanmcgrath/shinekit"
+readme = "../readme.md"
+keywords = ["shinekit", "gui", "framework", "cocoa", "iphone", "ios", "windows"]
+license = "MIT"
+categories = ["gui"]
 
 [dependencies]
 libc = "0.2"
